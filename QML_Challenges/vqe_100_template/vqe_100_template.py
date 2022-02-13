@@ -2,8 +2,8 @@
 
 import sys
 import pennylane as qml
-import numpy as np
-
+# import numpy as np
+from pennylane import numpy as np
 
 def variational_ansatz(params, wires):
     """
@@ -60,7 +60,7 @@ def run_vqe(H):
     # Initialize parameters
     num_qubits = len(H.wires)
     num_param_sets = (2 ** num_qubits) - 1
-    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
+    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3), requires_grad=True)  # ハマった
 
     energy = 0
 
@@ -69,6 +69,17 @@ def run_vqe(H):
     # Create a quantum device, set up a cost funtion and optimizer, and run the VQE.
     # (We recommend ~500 iterations to ensure convergence for this problem,
     # or you can design your own convergence criteria)
+    dev = qml.device("default.qubit", wires=num_qubits)
+
+    @qml.qnode(dev)
+    def cost(params):
+        variational_ansatz(params, wires=H.wires)
+        return qml.expval(H)
+
+    opt = qml.GradientDescentOptimizer(stepsize=0.01)
+
+    for n in range(500):
+        params, energy = opt.step_and_cost(cost, params)
 
     # QHACK #
 
@@ -152,7 +163,12 @@ if __name__ == "__main__":
     # DO NOT MODIFY anything in this code block
 
     # Turn input to Hamiltonian
-    H = parse_hamiltonian_input(sys.stdin.read())
+    # H = parse_hamiltonian_input(sys.stdin.read())
+    ##############################################
+    with open("1.in") as f:
+        read_ham = f.read()
+    ##############################################
+    H = parse_hamiltonian_input(read_ham)
 
     # Send Hamiltonian through VQE routine and output the solution
     ground_state_energy = run_vqe(H)
