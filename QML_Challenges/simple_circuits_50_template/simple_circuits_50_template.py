@@ -25,11 +25,20 @@ def simple_circuits_50(angle):
     # QHACK #
 
     # Step 1 : initialize a device
+    dev = qml.device("default.qubit", wires=2)
 
     # Step 2 : Create a quantum circuit and qnode
+    @qml.qnode(dev)
+    def func(param):
+        qml.Hadamard(wires=0)
+        qml.CNOT(wires=(0, 1))
+        qml.RY(param, wires=0)
+        return qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))
+
+    # print(qml.draw(func)(0.1))
 
     # Step 3 : Run the qnode
-    # expectation_value = ?
+    expectation_value = func(angle)
 
     # QHACK #
     return expectation_value
@@ -40,6 +49,10 @@ if __name__ == "__main__":
 
     # Load and process input
     angle_str = sys.stdin.read()
+    ##############################################
+    # with open("2.in") as f:
+    #     angle_str = f.read()
+    ##############################################
     angle = float(angle_str)
 
     ans = simple_circuits_50(angle)
